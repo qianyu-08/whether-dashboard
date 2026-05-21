@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #11182d;
+      --panel-2: #0f1528;
+      --line: rgba(255,255,255,.12);
+      --text: #e8edf7;
+      --muted: #9aa7c0;
+      --accent: #6ea8ff;
+      --accent-2: #7cf2c8;
+      --danger: #ff7b7b;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 500px at 20% 0%, rgba(110,168,255,.18), transparent 60%),
+        radial-gradient(900px 400px at 100% 10%, rgba(124,242,200,.12), transparent 45%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    header {
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: end;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: .02em;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .search input {
+      width: min(340px, 62vw);
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-family: var(--mono);
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      font-weight: 600;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.25); }
+    .btn.primary { background: linear-gradient(180deg, rgba(110,168,255,.32), rgba(110,168,255,.14)); }
+    .btn.good { background: linear-gradient(180deg, rgba(124,242,200,.25), rgba(124,242,200,.12)); }
+
+    .status {
+      margin: 14px 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+      font-family: var(--mono);
+      min-height: 1.2em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-inner { padding: 18px; }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1.1fr .9fr;
+      align-items: center;
+      min-height: 260px;
+    }
+
+    .location {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-bottom: 10px;
+    }
+
+    .temp {
+      font-size: clamp(56px, 10vw, 90px);
+      font-weight: 800;
+      line-height: .9;
+      margin: 0;
+      letter-spacing: -.05em;
+    }
+
+    .condition {
+      font-size: 18px;
+      margin: 8px 0 0;
+      color: #dbe6ff;
+    }
+
+    .meta {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .weather-icon {
+      display: grid;
+      place-items: center;
+      font-size: 92px;
+      min-height: 180px;
+      background: radial-gradient(circle at 50% 45%, rgba(110,168,255,.2), transparent 60%);
+      user-select: none;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat {
+      padding: 16px;
+      background: rgba(0,0,0,.12);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+
+    .stat .value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 16px;
+      letter-spacing: .03em;
+      color: #dce6ff;
+    }
+
+    .forecast {
+      display: grid;
+      gap: 10px;
+    }
+
+    .day {
+      display: grid;
+      grid-template-columns: 1.2fr .4fr .4fr .6fr;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      background: rgba(0,0,0,.12);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      font-family: var(--mono);
+    }
+
+    .day .name { font-family: var(--sans); font-weight: 700; }
+    .day .desc { color: var(--muted); font-family: var(--sans); }
+    .day .max { color: #ffffff; font-weight: 700; }
+    .day .min { color: var(--muted); }
+
+    .loading {
+      opacity: .75;
+      animation: pulse 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: .5; }
+      to { opacity: .95; }
+    }
+
+    .error {
+      color: #ffd0d0;
+      background: rgba(255,123,123,.1);
+      border: 1px solid rgba(255,123,123,.25);
+      padding: 12px 14px;
+      border-radius: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .grid, .hero { grid-template-columns: 1fr; }
+      .day { grid-template-columns: 1fr 1fr; }
+      .day .desc, .day .max, .day .min { justify-self: start; }
+    }
+
+    @media (max-width: 540px) {
+      .stats { grid-template-columns: 1fr; }
+      .search input { width: 48vw; }
+      .day { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Weather Dashboard</h1>
+        <div class="subtitle">API連携の天気ダッシュボード。鍵なしで動くので、無駄な登録地獄を回避できます。</div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <input id="cityInput" type="text" placeholder="都市名を入力 例: Tokyo" />
+        </div>
+        <button class="btn primary" id="searchBtn">検索</button>
+        <button class="btn good" id="locBtn">現在地</button>
+      </div>
+    </header>
+
+    <div class="status" id="status">都市を検索するか、現在地を使ってください。</div>
+    <div class="error" id="errorBox"></div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="card-inner hero">
+          <div>
+            <div class="location" id="locationText">-</div>
+            <h2 class="temp loading" id="temp">--°</h2>
+            <p class="condition" id="condition">Loading...</p>
+            <div class="meta">
+              <span class="pill" id="updatedAt">更新: --</span>
+              <span class="pill" id="weatherCode">CODE: --</span>
+            </div>
+          </div>
+          <div class="weather-icon" id="icon">⛅</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-inner">
+          <h3 class="section-title">現在の詳細</h3>
+          <div class="stats">
+            <div class="stat"><div class="label">体感温度</div><div class="value" id="feelsLike">--</div></div>
+            <div class="stat"><div class="label">湿度</div><div class="value" id="humidity">--</div></div>
+            <div class="stat"><div class="label">風速</div><div class="value" id="windSpeed">--</div></div>
+            <div class="stat"><div class="label">気圧</div><div class="value" id="pressure">--</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" style="grid-column: 1 / -1;">
+        <div class="card-inner">
+          <h3 class="section-title">7日間予報</h3>
+          <div class="forecast" id="forecastList"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      cityInput: document.getElementById('cityInput'),
+      searchBtn: document.getElementById('searchBtn'),
+      locBtn: document.getElementById('locBtn'),
+      status: document.getElementById('status'),
+      errorBox: document.getElementById('errorBox'),
+      locationText: document.getElementById('locationText'),
+      temp: document.getElementById('temp'),
+      condition: document.getElementById('condition'),
+      updatedAt: document.getElementById('updatedAt'),
+      weatherCode: document.getElementById('weatherCode'),
+      icon: document.getElementById('icon'),
+      feelsLike: document.getElementById('feelsLike'),
+      humidity: document.getElementById('humidity'),
+      windSpeed: document.getElementById('windSpeed'),
+      pressure: document.getElementById('pressure'),
+      forecastList: document.getElementById('forecastList'),
+    };
+
+    const weatherMap = {
+      0: { text: '快晴', icon: '☀️' },
+      1: { text: 'ほぼ快晴', icon: '🌤️' },
+      2: { text: '一部曇り', icon: '⛅' },
+      3: { text: '曇り', icon: '☁️' },
+      45: { text: '霧', icon: '🌫️' },
+      48: { text: '霧氷', icon: '🌫️' },
+      51: { text: '弱い霧雨', icon: '🌦️' },
+      53: { text: '霧雨', icon: '🌦️' },
+      55: { text: '強い霧雨', icon: '🌧️' },
+      61: { text: '弱い雨', icon: '🌧️' },
+      63: { text: '雨', icon: '🌧️' },
+      65: { text: '強い雨', icon: '🌧️' },
+      71: { text: '弱い雪', icon: '🌨️' },
+      73: { text: '雪', icon: '🌨️' },
+      75: { text: '強い雪', icon: '❄️' },
+      80: { text: 'にわか雨', icon: '🌦️' },
+      81: { text: '強いにわか雨', icon: '🌧️' },
+      82: { text: '激しいにわか雨', icon: '⛈️' },
+      95: { text: '雷雨', icon: '⛈️' },
+      96: { text: '雹を伴う雷雨', icon: '⛈️' },
+      99: { text: '強い雹を伴う雷雨', icon: '⛈️' },
+    };
+
+    function fmtTime(iso) {
+      const d = new Date(iso);
+      return new Intl.DateTimeFormat('ja-JP', {
+        month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      }).format(d);
+    }
+
+    function fmtDay(iso) {
+      const d = new Date(iso);
+      return new Intl.DateTimeFormat('ja-JP', { weekday: 'short', month: 'numeric', day: 'numeric' }).format(d);
+    }
+
+    function showError(message) {
+      els.errorBox.textContent = message;
+      els.errorBox.style.display = 'block';
+    }
+
+    function clearError() {
+      els.errorBox.textContent = '';
+      els.errorBox.style.display = 'none';
+    }
+
+    function setLoading(isLoading) {
+      els.status.textContent = isLoading ? 'APIから天気を取得中…' : els.status.textContent;
+      els.temp.classList.toggle('loading', isLoading);
+      els.condition.classList.toggle('loading', isLoading);
+    }
+
+    async function geocodeCity(city) {
+      const url = new URL('https://geocoding-api.open-meteo.com/v1/search');
+      url.searchParams.set('name', city);
+      url.searchParams.set('count', '1');
+      url.searchParams.set('language', 'ja');
+      url.searchParams.set('format', 'json');
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('ジオコーディングAPIに失敗しました');
+      const data = await res.json();
+      const place = data.results?.[0];
+      if (!place) throw new Error('都市が見つかりませんでした');
+      return place;
+    }
+
+    async function fetchWeather(lat, lon, label = '') {
+      clearError();
+      setLoading(true);
+
+      const url = new URL('https://api.open-meteo.com/v1/forecast');
+      url.searchParams.set('latitude', lat);
+      url.searchParams.set('longitude', lon);
+      url.searchParams.set('current', 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,surface_pressure');
+      url.searchParams.set('daily', 'weather_code,temperature_2m_max,temperature_2m_min');
+      url.searchParams.set('timezone', 'auto');
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('天気APIの取得に失敗しました');
+        const data = await res.json();
+
+        const cur = data.current;
+        const daily = data.daily;
+        const code = cur.weather_code;
+        const info = weatherMap[code] || { text: '不明', icon: '🌈' };
+
+        els.locationText.textContent = label || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+        els.temp.textContent = `${Math.round(cur.temperature_2m)}°`;
+        els.condition.textContent = info.text;
+        els.updatedAt.textContent = `更新: ${fmtTime(cur.time)}`;
+        els.weatherCode.textContent = `CODE: ${code}`;
+        els.icon.textContent = info.icon;
+        els.feelsLike.textContent = `${Math.round(cur.apparent_temperature)}°`;
+        els.humidity.textContent = `${cur.relative_humidity_2m}%`;
+        els.windSpeed.textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
+        els.pressure.textContent = `${Math.round(cur.surface_pressure)} hPa`;
+        els.status.textContent = `表示中: ${label || '現在地'} (${lat.toFixed(2)}, ${lon.toFixed(2)})`;
+
+        els.forecastList.innerHTML = daily.time.map((day, i) => {
+          const dayCode = daily.weather_code[i];
+          const dayInfo = weatherMap[dayCode] || { text: '不明', icon: '🌈' };
+          return `
+            <div class="day">
+              <div class="name">${fmtDay(day)}</div>
+              <div class="desc">${dayInfo.icon} ${dayInfo.text}</div>
+              <div class="max">${Math.round(daily.temperature_2m_max[i])}°</div>
+              <div class="min">${Math.round(daily.temperature_2m_min[i])}°</div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        showError(err.message || '不明なエラー');
+        els.status.textContent = '取得に失敗しました';
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function searchCity() {
+      const city = els.cityInput.value.trim();
+      if (!city) {
+        showError('都市名を入力してください');
+        return;
+      }
+      els.status.textContent = `検索中: ${city}`;
+      try {
+        const place = await geocodeCity(city);
+        await fetchWeather(place.latitude, place.longitude, `${place.name}${place.admin1 ? ' / ' + place.admin1 : ''}, ${place.country}`);
+      } catch (err) {
+        showError(err.message || '検索に失敗しました');
+      }
+    }
+
+    function useLocation() {
+      if (!navigator.geolocation) {
+        showError('このブラウザは位置情報に対応していません');
+        return;
+      }
+      els.status.textContent = '現在地を取得中…';
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          await fetchWeather(latitude, longitude, '現在地');
+        },
+        () => showError('位置情報の取得に失敗しました。ブラウザ設定を確認してください。'),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+      );
+    }
+
+    els.searchBtn.addEventListener('click', searchCity);
+    els.locBtn.addEventListener('click', useLocation);
+    els.cityInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchCity();
+    });
+
+    // 初期表示: 東京
+    els.cityInput.value = 'Tokyo';
+    searchCity();
+  </script>
+</body>
+</html>
